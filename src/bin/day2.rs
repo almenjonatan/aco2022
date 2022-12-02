@@ -44,10 +44,6 @@ fn part1(input: &Vec<(&str, &str)>) -> Result<(), Box<dyn std::error::Error>> {
 
 fn part2(input: &Vec<(&str, &str)>) -> Result<(), Box<dyn std::error::Error>> { 
 
-    let input = std::fs::read_to_string("input/day2.txt")?;
-
-    let input: Vec<(&str, &str)> = input.lines().map(|l| l.split_once(" ").unwrap()).collect();
-
     let mut total_score = 0;
     
     // A: ROCK
