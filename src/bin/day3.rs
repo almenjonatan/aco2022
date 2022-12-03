@@ -1,16 +1,38 @@
 use std::{collections::HashSet, str::Chars};
-fn char_to_priority(c: &char) -> i32 {
-    match c.is_lowercase() {
-        true => (*c as i32) - 96,
-        false => (*c as i32) - 38,
-    }
-}
+
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = std::fs::read_to_string("input/day3.txt")?;
     println!("{}", part1(&input)?);
     println!("{}", part2(&input)?);
     Ok(())
+}
+
+fn part1(input: &str) -> Result<i32, Box<dyn std::error::Error>> {
+    // let input = std::fs::read_to_string("input/day3.txt")?;
+    let compartments: Vec<(&str, &str)> = input.lines().map(|l| l.split_at(l.len() / 2)).collect();
+
+    let mut score = 0;
+
+    for (compartment1, compartment2) in compartments {
+        let mut c1 = HashSet::new();
+        let mut c2 = HashSet::new();
+
+        c1.extend(compartment1.chars());
+        c2.extend(compartment2.chars());
+
+        for c in c2 {
+            //already exists
+            if !c1.insert(c) {
+                score = char_to_priority(&c) + score;
+                break;
+            }
+        }
+    }
+
+    println!("{}", score);
+
+    Ok(score)
 }
 
 fn part2(input: &str) -> Result<i32, Box<dyn std::error::Error>> {
@@ -52,31 +74,11 @@ fn similar(containers: Vec<Chars>) -> char {
     unreachable!("Should not happen")
 }
 
-fn part1(input: &str) -> Result<i32, Box<dyn std::error::Error>> {
-    // let input = std::fs::read_to_string("input/day3.txt")?;
-    let compartments: Vec<(&str, &str)> = input.lines().map(|l| l.split_at(l.len() / 2)).collect();
-
-    let mut score = 0;
-
-    for (compartment1, compartment2) in compartments {
-        let mut c1 = HashSet::new();
-        let mut c2 = HashSet::new();
-
-        c1.extend(compartment1.chars());
-        c2.extend(compartment2.chars());
-
-        for c in c2 {
-            //already exists
-            if !c1.insert(c) {
-                score = char_to_priority(&c) + score;
-                break;
-            }
-        }
+fn char_to_priority(c: &char) -> i32 {
+    match c.is_lowercase() {
+        true => (*c as i32) - 96,
+        false => (*c as i32) - 38,
     }
-
-    println!("{}", score);
-
-    Ok(score)
 }
 
 #[cfg(test)]
