@@ -1,6 +1,5 @@
 use std::{collections::HashSet, str::Chars};
 
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = std::fs::read_to_string("input/day3.txt")?;
     println!("{}", part1(&input)?);
@@ -86,7 +85,7 @@ pub mod test {
     use crate::{part1, part2};
 
     #[test]
-    pub fn test_input() {
+    pub fn test_day1() {
         let s = "vJrwpWtwJgWrhcsFMMfFFhFp";
         let score = part1(&s).unwrap();
 
