@@ -8,7 +8,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn part1(input: &str) -> Result<i32, Box<dyn std::error::Error>> {
-    // let input = std::fs::read_to_string("input/day3.txt")?;
     let compartments: Vec<(&str, &str)> = input.lines().map(|l| l.split_at(l.len() / 2)).collect();
 
     let mut score = 0;
