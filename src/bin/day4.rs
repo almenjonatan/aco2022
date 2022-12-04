@@ -49,7 +49,7 @@ fn part1(input: &str) -> Result<usize, Box<dyn std::error::Error>> {
             let s1 = sections.0.trim().parse::<Section>().unwrap();
             let s2 = sections.1.trim().parse::<Section>().unwrap();
             let mut o = vec![s1, s2];
-            o.sort_by_key(|s| s.size);
+            o.sort_by_key(|s| -s.size);
             o[0].contains(&o[1])
         })
         .filter(|r| *r)
