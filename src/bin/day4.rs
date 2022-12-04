@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_variables)]
-use std::{str::FromStr, string::ParseError};
+use std::str::FromStr;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> anyhow::Result<()> {
     let input = std::fs::read_to_string("input/day4.txt")?;
     println!("{}", part1(&input)?);
     println!("{}", part2(&input)?);
@@ -19,19 +19,20 @@ impl Section {
         self.start <= other.start && self.end >= other.end
     }
 
-    // Smallest start always self
-    pub fn overlaps(&self, other: &Section) -> bool { 
-        other.start <= self.end
+    pub fn overlaps(&self, other: &Section) -> bool {
+        let mut o = vec![self, other];
+        o.sort_by_key(|s| s.start);
+        o[1].start <= o[0].end
     }
 }
 
 impl FromStr for Section {
-    type Err = ParseError;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.split_once("-").unwrap();
-        let start = s.0.parse().unwrap();
-        let end = s.1.parse().unwrap();
+        let start = s.0.trim().parse()?;
+        let end = s.1.trim().parse()?;
 
         Ok(Self {
             start,
@@ -41,16 +42,14 @@ impl FromStr for Section {
     }
 }
 
-fn part1(input: &str) -> Result<usize, Box<dyn std::error::Error>> {
+fn part1(input: &str) -> anyhow::Result<usize> {
     let input = input
         .lines()
         .map(|s| {
             let sections = s.split_once(",").unwrap();
-            let s1 = sections.0.trim().parse::<Section>().unwrap();
-            let s2 = sections.1.trim().parse::<Section>().unwrap();
-            let mut o = vec![s1, s2];
-            o.sort_by_key(|s| -s.size);
-            o[0].contains(&o[1])
+            let s1 = sections.0.parse::<Section>().unwrap();
+            let s2 = sections.1.parse::<Section>().unwrap();
+            s1.contains(&s2) || s2.contains(&s1)
         })
         .filter(|r| *r)
         .count();
@@ -58,19 +57,17 @@ fn part1(input: &str) -> Result<usize, Box<dyn std::error::Error>> {
     Ok(input)
 }
 
-fn part2(input: &str) -> Result<usize, Box<dyn std::error::Error>> {
+fn part2(input: &str) -> anyhow::Result<usize> {
     let input = input
-    .lines()
-    .map(|s| {
-        let sections = s.split_once(",").unwrap();
-        let s1 = sections.0.trim().parse::<Section>().unwrap();
-        let s2 = sections.1.trim().parse::<Section>().unwrap();
-        let mut o = vec![s1, s2];
-        o.sort_by_key(|s| s.start);
-        o[0].overlaps(&o[1])
-    })
-    .filter(|r| *r)
-    .count();
+        .lines()
+        .map(|s| {
+            let sections = s.split_once(",").unwrap();
+            let s1 = sections.0.parse::<Section>().unwrap();
+            let s2 = sections.1.parse::<Section>().unwrap();
+            s1.overlaps(&s2)
+        })
+        .filter(|r| *r)
+        .count();
 
     Ok(input)
 }
@@ -99,6 +96,6 @@ mod test {
         2-6,4-8
         4-6,7-10"#;
 
-        assert_eq!(part2(input).unwrap(),  4)
+        assert_eq!(part2(input).unwrap(), 4)
     }
 }
