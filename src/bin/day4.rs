@@ -16,7 +16,7 @@ struct Section {
 
 impl Section {
     pub fn contains(&self, other: &Section) -> bool {
-        return self.start <= other.start && self.end >= other.end;
+        self.start <= other.start && self.end >= other.end
     }
 
     // Smallest start always self
