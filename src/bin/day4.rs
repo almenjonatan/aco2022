@@ -80,7 +80,7 @@ mod test {
     use crate::{part1, part2};
 
     #[test]
-    fn day1() {
+    pub fn p1() {
         let input = r#"2-4,6-8
         2-3,4-5
         5-7,7-9
@@ -92,7 +92,7 @@ mod test {
     }
 
     #[test]
-    fn day2() {
+    pub fn p2() {
         let input = r#"5-7,7-9
         2-8,3-7
         6-6,4-6

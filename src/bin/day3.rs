@@ -84,7 +84,7 @@ pub mod test {
     use crate::{part1, part2};
 
     #[test]
-    pub fn test_day1() {
+    pub fn p1() {
         let s = "vJrwpWtwJgWrhcsFMMfFFhFp";
         let score = part1(&s).unwrap();
 
@@ -92,7 +92,7 @@ pub mod test {
     }
 
     #[test]
-    pub fn test_day2() {
+    pub fn p2() {
         let s = r"vJrwpWtwJgWrhcsFMMfFFhFp
         jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
         PmmdzqPrVvPwwTWBwg";
