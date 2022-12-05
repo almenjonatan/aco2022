@@ -109,9 +109,8 @@ mod test {
 
     #[test]
     pub fn p1() {
-        let input = r#"
-    [D]    
-[N] [C]        
+        let input= r#"    [D]    
+[N] [C]    
 [Z] [M] [P]
  1   2   3 
 
@@ -121,14 +120,5 @@ move 2 from 2 to 1
 move 1 from 1 to 2"#;
 
         assert_eq!(part1(input).unwrap(), "CMZ");
-    }
-
-    #[test]
-    pub fn p2() {
-        let input = "    [D]    
-        [N] [C]    
-        [Z] [M] [P]
-         1   2   3";
-        assert_eq!(part2(input).unwrap(), "MCD")
     }
 }
