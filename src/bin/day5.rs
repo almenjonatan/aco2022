@@ -1,5 +1,7 @@
 #![allow(dead_code, unused_variables)]
 
+use std::{collections::VecDeque, str::FromStr, string::ParseError};
+
 use itertools::Itertools;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -10,106 +12,151 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug)]
-struct Instruction {
+pub struct Instruction {
     quantity: usize,
     from: usize,
     to: usize,
 }
 
-fn parse(input: &str) -> (Vec<Instruction>, Vec<Vec<&str>>) {
-    let crate_positions = input
-        .lines()
-        .find_position(|l| l.contains("1"))
-        .unwrap()
-        .1
-        .split(" ")
-        .filter(|s| !s.is_empty())
-        .map(|s| s.parse::<i32>().unwrap())
-        .last()
-        .unwrap() as usize;
+impl Instruction {
+    pub fn parse_instructions(input: &str) -> Vec<Instruction> {
+        input
+            .lines()
+            .skip_while(|l| !l.contains("1"))
+            .skip(2)
+            .map(|s| s.parse().unwrap())
+            .collect_vec()
+    }
+}
 
-    let mut cargo: Vec<Vec<&str>> = input
+impl FromStr for Instruction {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.split(" ").collect::<Vec<_>>();
+        let mut instruction = Instruction {
+            from: s[3].parse().unwrap(),
+            to: s[5].parse().unwrap(),
+            quantity: s[1].parse().unwrap(),
+        };
+        instruction.from = instruction.from - 1;
+        instruction.to = instruction.to - 1;
+        Ok(instruction)
+    }
+}
+
+pub trait Crane {
+    fn handle_instruction(&mut self, instruction: &Instruction);
+    fn get_top_crates(&self) -> String;
+}
+
+struct Crane9001 {
+    cargo: Vec<VecDeque<char>>,
+}
+
+impl Crane for Crane9001 {
+    fn handle_instruction(&mut self, instruction: &Instruction) {
+
+        let mut tmp = vec![];
+
+        for q in 0..instruction.quantity {
+            tmp.push(self.cargo[instruction.from].pop_front().unwrap())
+        }
+
+        for item in tmp.iter().rev() {
+            self.cargo[instruction.to].push_front(*item)
+        }
+    }
+
+    fn get_top_crates(&self) -> String {
+        self.cargo.iter().filter_map(|m| m.front()).join("")
+    }
+}
+
+#[derive(Debug)]
+pub struct SimpleCrane {
+    cargo: Vec<VecDeque<char>>,
+}
+
+impl Crane for SimpleCrane {
+    fn handle_instruction(&mut self, instruction: &Instruction) {
+        for i in 0..instruction.quantity {
+            let item = self.cargo[instruction.from].pop_front().unwrap();
+            self.cargo[instruction.to].push_front(item);
+        }
+    }
+
+    fn get_top_crates(&self) -> String {
+        self.cargo.iter().filter_map(|m| m.front()).join("")
+    }
+}
+
+fn crane_parser(input: &str) -> Vec<VecDeque<char>> {
+    let cols = (input.lines().next().unwrap().len() + 1) / 4;
+
+    let mut cargo: Vec<VecDeque<char>> = input
         .lines()
-        .by_ref()
         .take_while(|l| !l.contains("1"))
-        .fold(vec![vec![]; crate_positions], |mut acc, line| {
-            for i in 0..crate_positions {
-                let k = (i * 4) as usize;
-                acc[i].push(&line[(k + 1)..(k + 2)])
+        .fold(vec![VecDeque::new(); cols], |mut acc, line| {
+            for i in 0..(cols) {
+                acc[i].push_back(line.as_bytes()[(i * 4 + 1)] as char)
             }
             acc
-        });
-
-    cargo.iter_mut().for_each(|c| c.retain(|p| *p != " "));
-
-    let instructions = input
-        .lines()
-        .skip_while(|l| !l.contains("1"))
-        .skip(2)
-        .map(|s| {
-            let s = s.split(" ").collect::<Vec<_>>();
-            let mut i = Instruction {
-                from: s[3].parse().unwrap(),
-                to: s[5].parse().unwrap(),
-                quantity: s[1].parse().unwrap(),
-            };
-            i.from = i.from - 1;
-            i.to = i.to - 1;
-            i
         })
-        .collect_vec();
+        .clone();
 
-    (instructions, cargo)
+    cargo.iter_mut().for_each(|c| c.retain(|p| *p != ' '));
+    cargo
+}
+
+impl FromStr for SimpleCrane {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let cargo = crane_parser(s);
+
+        Ok(SimpleCrane { cargo })
+    }
+}
+
+impl FromStr for Crane9001 {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let cargo = crane_parser(s);
+        Ok(Crane9001 { cargo })
+    }
 }
 
 fn part1(input: &str) -> anyhow::Result<String> {
-    let (instructions, mut cargo) = parse(input);
+    let mut simple_crane = input.parse::<SimpleCrane>().unwrap();
+    let instructions = Instruction::parse_instructions(input);
 
-    for i in instructions {
-        for q in 0..i.quantity {
-            let item = cargo[i.from].remove(0);
-            cargo[i.to].insert(0, item);
-        }
-    }
+    instructions
+        .iter()
+        .for_each(|instruction| simple_crane.handle_instruction(instruction));
 
-    let s = cargo.iter().filter_map(|m| m.first()).join("");
-    Ok(s)
+    Ok(simple_crane.get_top_crates())
 }
 
 fn part2(input: &str) -> anyhow::Result<String> {
-    let (instructions, mut cargo) = parse(input);
+    let mut crane_9001 = input.parse::<Crane9001>().unwrap();
+    let instructions = Instruction::parse_instructions(input);
 
-    for i in instructions {
-        if i.quantity == 1 {
-            let item = cargo[i.from].remove(0);
-            cargo[i.to].insert(0, item)
-        }
+    instructions
+        .iter()
+        .for_each(|instruction| crane_9001.handle_instruction(instruction));
 
-        if i.quantity > 1 {
-            let mut tmp = vec![];
-
-            for q in 0..i.quantity {
-                tmp.push(cargo[i.from].remove(0))
-            }
-
-            for item in tmp.iter().rev() {
-                cargo[i.to].insert(0, item)
-            }
-        }
-    }
-
-    let s = cargo.iter().filter_map(|m| m.first()).join("");
-
-    Ok(s)
+    Ok(crane_9001.get_top_crates())
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{part1, part2};
+    use crate::{part1, SimpleCrane};
 
     #[test]
     pub fn p1() {
-        let input= r#"    [D]    
+        let input = r#"    [D]    
 [N] [C]    
 [Z] [M] [P]
  1   2   3 
@@ -118,6 +165,9 @@ move 1 from 2 to 1
 move 3 from 1 to 3
 move 2 from 2 to 1
 move 1 from 1 to 2"#;
+
+        let crane: SimpleCrane = input.parse().unwrap();
+        println!("{:?}", crane);
 
         assert_eq!(part1(input).unwrap(), "CMZ");
     }

@@ -1,4 +1,3 @@
-#![allow(dead_code, unused_variables)]
 use std::str::FromStr;
 
 fn main() -> anyhow::Result<()> {
@@ -9,20 +8,19 @@ fn main() -> anyhow::Result<()> {
 }
 
 struct Section {
-    pub start: i32,
     pub end: i32,
-    pub size: i32,
+    pub start: i32,
 }
 
 impl Section {
     pub fn contains(&self, other: &Section) -> bool {
-        self.start <= other.start && self.end >= other.end
+        self.start <= other.start && other.end <= self.end
     }
 
     pub fn overlaps(&self, other: &Section) -> bool {
-        let mut o = vec![self, other];
-        o.sort_by_key(|s| s.start);
-        o[1].start <= o[0].end
+        let mut sections = vec![self, other];
+        sections.sort_by_key(|s| s.start);
+        sections[1].start <= sections[0].end
     }
 }
 
@@ -34,11 +32,7 @@ impl FromStr for Section {
         let start = s.0.trim().parse()?;
         let end = s.1.trim().parse()?;
 
-        Ok(Self {
-            start,
-            end,
-            size: end - start,
-        })
+        Ok(Self { start, end })
     }
 }
 
@@ -95,7 +89,7 @@ mod test {
         6-6,4-6
         2-6,4-8
         4-6,7-10"#;
-
+        // 1-3, 1-4
         assert_eq!(part2(input).unwrap(), 4)
     }
 }
